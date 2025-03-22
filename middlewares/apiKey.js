@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const AUTH_API_URL = "https://user-authentication-api-jqfm.onrender.com/api/v2"
+const AUTH_API_URL = "https://user-authentication-api-jqfm.onrender.com/api/v2/apiKey"
 
 export const apiKeyMiddleware = async (req, res, next) => {
   try {
@@ -10,7 +10,7 @@ export const apiKeyMiddleware = async (req, res, next) => {
     }
 
     // Validate the API key with the authentication API
-    const response = await axios.post(`${AUTH_API_URL}/apiKey/validate`, { apiKey })
+    const response = await axios.post(`${AUTH_API_URL}/validate`, { apiKey })
 
     if (response.data.valid) {
       // If the API key is valid, attach the user info to the request
