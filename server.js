@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import imageRouter from "./routes/image.js";
 import userRouter from "./routes/user.js";
 import { connectToDatabase } from "./db/database.js";
-// import { apiKeyMiddleware } from "./middlewares/apiKey.js";
+import { apiKeyMiddleware } from "./middlewares/apiKey.js";
 import cors from "cors";
 import path from "path";
 import helmet from "helmet";
@@ -52,12 +52,9 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/image", imageRouter);
+app.use("/api/v1/image",apiKeyMiddleware, imageRouter);
 
-const __dirname = path.resolve();
 
-// Serve static files (if needed)
-app.use(express.static(path.join(__dirname, "public")));
 // Root route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
