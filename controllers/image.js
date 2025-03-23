@@ -4,35 +4,38 @@ import path from "path";
 
 export const uploadImage = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "No image uploaded" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No images uploaded" });
     }
 
     const userId = req.user.id; // Get User ID from middleware
-    const imagePath = path.join("uploads", `${userId}.jpg`);
+    const uploadDir = "uploads";
 
-    // Check if the file already exists
-    if (fs.existsSync(imagePath)) {
-      return res
-        .status(409)
-        .json({ message: "Image already exists for this user" });
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // Process the image using OCR
-    const {
-      data: { text },
-    } = await Tesseract.recognize(imagePath, "eng");
+    let results = [];
 
-    // Generate a public URL (assuming static file hosting)
-    const imageUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/uploads/${userId}.jpg`;
+    for (const file of req.files) {
+      const timestamp = Date.now();
+      const imagePath = path.join(uploadDir, `${userId}_${timestamp}.jpg`);
+      fs.writeFileSync(imagePath, file.buffer); // Save the file
 
-    res.json({ extractedText: text, imagePath, imageUrl });
+      // Process the image using OCR
+      const {
+        data: { text },
+      } = await Tesseract.recognize(imagePath, "eng");
+
+      // Generate a public URL (assuming static file hosting)
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${userId}_${timestamp}.jpg`;
+
+      results.push({ imageUrl, extractedText: text });
+    }
+
+    res.json({ message: "Images uploaded successfully", results });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error processing image", error: error.message });
+    res.status(500).json({ message: "Error processing images", error: error.message });
   }
 };
 
@@ -42,10 +45,8 @@ export const getHistory = async (req, res) => {
       filename,
       timestamp: fs.statSync(`uploads/${filename}`).mtime,
     }));
-    res.json(history); // Return the list of uploaded images
+    res.json(history);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error getting history", error: error.message });
+    res.status(500).json({ message: "Error getting history", error: error.message });
   }
 };

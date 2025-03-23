@@ -1,27 +1,29 @@
 import axios from "axios"
 
-const AUTH_API_URL = "https://user-authentication-api-jqfm.onrender.com/api/v2/apiKey"
+const AUTH_API_URL = "https://user-authentication-api-jqfm.onrender.com/api/v2/apiKey/validate"
 
 export const apiKeyMiddleware = async (req, res, next) => {
   try {
+    // Get API key from query params or headers
     const apiKey = req.query.key || req.headers["x-api-key"]
+
     if (!apiKey) {
       return res.status(401).json({ message: "API key is missing" })
     }
 
-    // Validate the API key with the authentication API
-    const response = await axios.post(`${AUTH_API_URL}/validate`, { apiKey })
+    // Validate API key by making a GET request with query params
+    const response = await axios.get(AUTH_API_URL, { params: { apiKey } })
 
     if (response.data.valid) {
-      // If the API key is valid, attach the user info to the request
-      req.user = response.data.user
-      next()
+      req.user = response.data.user // Attach user info to request
+      return next()
     } else {
-      res.status(403).json({ message: "Invalid API key" })
+      return res.status(403).json({ message: "Invalid API key" })
     }
   } catch (error) {
-    console.error("Error validating API key:", error.response?.data || error.message)
-    res.status(500).json({ message: "Error validating API key" })
+    console.error("Error validating API key:", error?.response?.data || error.message)
+
+    const statusCode = error?.response?.status || 500
+    return res.status(statusCode).json({ message: "Error validating API key" })
   }
 }
-

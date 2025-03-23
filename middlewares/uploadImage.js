@@ -11,14 +11,12 @@ if (!fs.existsSync(uploadDir)) {
 // Configure Multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); // Store files in the uploads folder
+    cb(null, uploadDir); // Store files in the uploads folder
   },
   filename: (req, file, cb) => {
-    if (!req.user || !req.user._id) {
-      return cb(new Error("User ID not found in request"), null);
-    }
     const ext = path.extname(file.originalname);
-    cb(null, `${req.user._id}${ext}`); // Rename file as userID.ext
+    const timestamp = Date.now();
+    cb(null, `${timestamp}${ext}`); // Rename file as timestamp.ext
   },
 });
 
@@ -32,11 +30,12 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Max file size: 5MB
+// Max file size: 5MB, Allow Multiple Files
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter,
 });
 
-export default upload;
+// Export the multer instance properly
+export const uploadImages = upload; // Do NOT call `.array()` here

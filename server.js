@@ -12,12 +12,15 @@ import mongoSanitize from "express-mongo-sanitize";
 import compression from "compression";
 import morgan from "morgan";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
 // Load environment variables
 dotenv.config({ path: "./config.env" });
 
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,8 +55,7 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/image",apiKeyMiddleware, imageRouter);
-
+app.use("/api/v1/image", apiKeyMiddleware, imageRouter);
 
 // Root route
 app.get("/", (req, res) => {
